@@ -1,0 +1,60 @@
+.root {
+}
+.tab-item-button-selected {
+  background: radial-gradient(
+    100% 464.29% at 0% 50%,
+    rgba(60, 66, 82, 0.1) 0%,
+    rgba(60, 66, 82, 0.02) 100%
+  );
+  border-radius: 18px;
+  color: rgb(37, 41, 46);
+  cursor: pointer;
+  display: flex;
+  flex-direction: row;
+  font-size: 20px;
+  font-weight: 800;
+  -webkit-box-pack: justify;
+  justify-content: space-between;
+  line-height: 24px;
+  min-height: 30px;
+  margin-left: -19px;
+  padding: 7px 10px 9px;
+  transition: all 0.125s ease 0s;
+  user-select: none;
+  width: 250px;
+  will-change: transform;
+}
+
+.tab-item-button-selected:hover { 
+  transform: scale(1.05);
+}
+
+.tab-item-button-selected:active { 
+  transform: scale(0.95);
+} 
+
+.tab-item-container-selected {
+  width: 100%;
+  display: flex;
+  padding: 0px;
+  -webkit-box-align: center;
+  align-items: center;
+  -webkit-box-pack: start;
+  justify-content: flex-start;
+}
+
+.tab-item-name-selected {
+  overflow: hidden;
+  padding-left: 10px;
+  padding-right: 6px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tab-item-icon-selected {
+  -webkit-box-align: center; 
+  align-items: center; 
+  display: flex; 
+  flex: 1 1 0%; 
+  -webkit-box-pack: end; 
+  justify-content: flex-end;
+}

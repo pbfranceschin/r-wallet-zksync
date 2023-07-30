@@ -1,0 +1,125 @@
+.root {
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  max-width: 300px;
+  align-items: center;
+}
+
+.card-image {
+  width: 100%;
+  display: flex;
+  padding: 0px;
+  -webkit-box-align: center;
+  align-items: center;
+  -webkit-box-pack: start;
+  justify-content: flex-start;
+}
+
+.image-cover-full {
+  height: 100%;
+  width: 100%;
+  -webkit-box-pack: center;
+  justify-content: center;
+}
+
+.container-card-image {
+  -webkit-box-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  justify-content: center;
+  border-radius: 25px;
+  box-shadow: rgba(108, 113, 119, 0.2) 8px 10px 10px;
+  cursor: pointer;
+  height: 251.75px;
+  margin: 15px 15px 0px;
+  overflow: hidden;
+  transition: all 0.125s ease 0s;
+  width: 251.75px;
+}
+
+@media (max-width: 1500px) {
+  .container-card-image {
+    height: calc(((100vw - 403px) - 90px) / 4);
+    width: calc(((100vw - 403px) - 90px) / 4);
+  }
+}
+
+@media (max-width: 1300px) {
+  .container-card-image {
+    height: calc(((100vw - 403px) - 60px) / 3);
+    width: calc(((100vw - 403px) - 60px) / 3);
+  }
+}
+
+@media (max-width: 1000px) {
+  .container-card-image {
+    height: calc(((100vw - 403px) - 30px) / 2);
+    width: calc(((100vw - 403px) - 30px) / 2);
+  }
+}
+
+.container-card-image:hover {
+  transform: scale(1.05);
+  box-shadow: rgba(108, 113, 119, 0.2) 5px 8px 8px;
+}
+
+.container-card-image:active {
+  transform: scale(0.95);
+  box-shadow: rgba(108, 113, 119, 0.2) 5px 8px 8px;
+}
+
+.image-cover {
+  color: rgba(0, 0, 0, 0);
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+  align-self: center;
+}
+
+.card-description {
+  // display: grid;
+  // grid-template-columns: 1fr 1fr;
+  // align-items: center;
+  // justify-items: start;
+  box-sizing: border-box;
+  color: rgba(60, 66, 82, 0.6);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 278px;
+  padding-right: 25px;
+  padding-bottom: 15px;
+  padding-left: 25px;
+}
+
+@media (max-width: 1500px) {
+  .card-description {
+    width: calc(((100vw - 418px) - 90px) / 4 + 30px);
+  }
+}
+
+@media (max-width: 1300px) {
+  .card-description {
+    width: calc(((100vw - 418px) - 60px) / 3 + 30px);
+  }
+}
+
+@media (max-width: 1000px) {
+  .card-description {
+    width: calc(((100vw - 418px) - 30px) / 2 + 30px);
+  }
+}
+
+.card-title {
+}
+
+.card-price {
+  padding: 0px;
+}
