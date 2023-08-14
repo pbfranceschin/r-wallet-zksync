@@ -6,6 +6,7 @@ import {
 import { TransactionDetailsForUserOp } from '@account-abstraction/sdk/dist/src/TransactionDetailsForUserOp';
 import { MessageSigningRequest } from '../../Background/redux-slices/signing';
 import { ethers } from 'ethers';
+import { AccountApiCustomParamsType, BaseAccountCustom } from './base-account-custom';
 
 export abstract class AccountApiType extends BaseAccountAPI {
   abstract serialize: () => Promise<object>;
@@ -27,6 +28,11 @@ export interface AccountApiParamsType<T, S> extends BaseApiParams {
   deserializeState?: S;
 }
 
+// export type AccountImplementationType = new (
+//   params: AccountApiParamsType<any, any>
+// ) => AccountApiType;
+
+
 export type AccountImplementationType = new (
-  params: AccountApiParamsType<any, any>
-) => AccountApiType;
+  params: AccountApiCustomParamsType<any, any>
+) => BaseAccountCustom

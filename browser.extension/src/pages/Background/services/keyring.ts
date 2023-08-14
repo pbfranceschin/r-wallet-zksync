@@ -25,6 +25,8 @@ import * as contractData from '../../../../contracts/hardhat_contracts.json';
 import config from '../../../exconfig';
 
 import { utils, Wallet, Provider, Contract, EIP712Signer, types } from "zksync-web3";
+import rWallet from "../../../rWallet.json";
+import { BaseAccountCustom } from '../../Account/account-api/base-account-custom';
 
 
 
@@ -46,8 +48,11 @@ export type KeyringServiceCreateProps = {
 } & BaseServiceCreateProps;
 
 export default class KeyringService extends BaseService<Events> {
+  // keyrings: {
+  //   [address: string]: AccountApiType;
+  // };
   keyrings: {
-    [address: string]: AccountApiType;
+    [address: string]: BaseAccountCustom;
   };
   vault?: string;
   password?: string;
@@ -104,7 +109,7 @@ export default class KeyringService extends BaseService<Events> {
     password?: string,
     encryptionKey?: string,
     encryptionSalt?: string
-  ): Promise<{ [address: string]: AccountApiType }> {
+  ): Promise<{ [address: string]: BaseAccountCustom }> {
     if (!this.vault) throw new Error('No vault to restore');
 
     let vault: any;
@@ -144,7 +149,7 @@ export default class KeyringService extends BaseService<Events> {
    */
   _restoreKeyring = async (
     serialized: KeyringSerialisedState
-  ): Promise<AccountApiType | undefined> => {
+  ): Promise<BaseAccountCustom | undefined> => {
     const { address, type, data } = serialized;
 
     const keyring = await this._newKeyring(address, type, data);
@@ -167,11 +172,11 @@ export default class KeyringService extends BaseService<Events> {
     address: string,
     type: string,
     data: any
-  ): Promise<AccountApiType> {
+  ): Promise<BaseAccountCustom> {
     const account = new AccountImplementations[type]({
       provider: this.provider,
-      entryPointAddress: this.entryPointAddress,
-      paymasterAPI: this.paymasterAPI,
+      // entryPointAddress: this.entryPointAddress,
+      // paymasterAPI: this.paymasterAPI,
       deserializeState: data,
     });
 
@@ -258,11 +263,25 @@ export default class KeyringService extends BaseService<Events> {
   ): Promise<string> => {
     const account = new AccountImplementations[implementation]({
       provider: this.provider,
-      entryPointAddress: this.entryPointAddress,
+      // entryPointAddress: this.entryPointAddress,
       context,
-      paymasterAPI: this.paymasterAPI,
+      // paymasterAPI: this.paymasterAPI,
     });
+
     const address = await account.getAccountAddress();
+    // const address = account.newAddress();
+
+    // const salt = ethers.utils.hexlify("salt");
+    // const abiCoder = new ethers.utils.AbiCoder();
+    
+    // const address = utils.create2Address(
+    //   config.factory_address,
+    //   utils.hashBytecode(rWallet.bytecode),
+    //   salt,
+    //   abiCoder.encode(["address"], [owner.address])
+    // );
+
+    // // //
     if (address === ethers.constants.AddressZero)
       throw new Error(
         `EntryPoint getAccountAddress returned error and returned address ${ethers.constants.AddressZero}, check factory contract is properly deployed.`
@@ -362,17 +381,9 @@ export default class KeyringService extends BaseService<Events> {
     userOp: ethers.PopulatedTransaction,
     context?: any
   ): Promise<ethers.PopulatedTransaction> => {
-    const provider = new Provider("https://zksync2-testnet.zksync.dev");
-    const account = this.keyrings[address] as any;
-    const pkey = account.owner.privateKey;
-    const owner = new Wallet(pkey, provider);
-    const signedTxHash = EIP712Signer.getSignedDigest(userOp);
-    const signature = ethers.utils.arrayify(ethers.utils.joinSignature(owner._signingKey().signDigest(signedTxHash)));
-    userOp.customData = {
-      ...userOp.customData,
-      customSignature: signature,
-    }
-    return userOp;
+    const keyring = this.keyrings[address];
+    
+    return keyring.signUserOpWithContext(userOp, context);
   }
   
   // signUserOpWithContext = async (
@@ -411,120 +422,111 @@ export default class KeyringService extends BaseService<Events> {
   // };
 
 // zksync
-  createUnsignedUserOp = async (
-    address: string,
-    transaction: EthersTransactionRequest
-  ): Promise<ethers.PopulatedTransaction> => {
-    const provider = new Provider("https://zksync2-testnet.zksync.dev");
-    let tx = {
-      from: address,
-      to: transaction.to,
-      chainId: (await provider.getNetwork()).chainId,
-      nonce: await provider.getTransactionCount(address),
-      type: 113,
-      customData: {
-        ergsPerPubdata: utils.DEFAULT_GAS_PER_PUBDATA_LIMIT,
-      } as types.Eip712Meta,
-      value: transaction.value
-        ? ethers.BigNumber.from(transaction.value)
-        : undefined,
-      gasPrice: await provider.getGasPrice(),
-      data: transaction.data
-        ? ethers.utils.hexConcat([transaction.data])
-        : '0x',
-      gasLimit: ethers.BigNumber.from(20000000),
-    }
-    return tx;
-  }
-
   // createUnsignedUserOp = async (
   //   address: string,
   //   transaction: EthersTransactionRequest
-  // ): Promise<UserOperationStruct> => {
-  //   const keyring = this.keyrings[address];
-  //   console.log('create unsig 1')
-  //   const userOp = await keyring.createUnsignedUserOp({
-  //     target: transaction.to,
-  //     data: transaction.data
-  //       ? ethers.utils.hexConcat([transaction.data])
-  //       : '0x',
+  // ): Promise<ethers.PopulatedTransaction> => {
+  //   const provider = new Provider("https://zksync2-testnet.zksync.dev");
+  //   let tx = {
+  //     from: address,
+  //     to: transaction.to,
+  //     chainId: (await provider.getNetwork()).chainId,
+  //     nonce: await provider.getTransactionCount(address),
+  //     type: 113,
+  //     customData: {
+  //       ergsPerPubdata: utils.DEFAULT_GAS_PER_PUBDATA_LIMIT,
+  //     } as types.Eip712Meta,
   //     value: transaction.value
   //       ? ethers.BigNumber.from(transaction.value)
   //       : undefined,
-  //     gasLimit: transaction.gasLimit,
-  //     maxFeePerGas: transaction.maxFeePerGas,
-  //     maxPriorityFeePerGas: transaction.maxPriorityFeePerGas,
-  //   });
-  //   console.log('create unsig 2')
+  //     gasPrice: await provider.getGasPrice(),
+  //     data: transaction.data
+  //       ? ethers.utils.hexConcat([transaction.data])
+  //       : '0x',
+  //     gasLimit: ethers.BigNumber.from(20000000),
+  //   }
+  //   return tx;
+  // }
 
-  //   userOp.sender = await userOp.sender;
-  //   userOp.nonce = ethers.BigNumber.from(await userOp.nonce).toHexString();
-  //   userOp.initCode = await userOp.initCode;
-  //   userOp.callData = await userOp.callData;
-  //   userOp.callGasLimit = ethers.BigNumber.from(
-  //     await userOp.callGasLimit
-  //   ).toHexString();
-  //   console.log('create unsig 3')
-  //   userOp.verificationGasLimit = ethers.BigNumber.from(
-  //     await userOp.verificationGasLimit
-  //   ).toHexString();
-  //   console.log('create unsig 4')
-  //   userOp.preVerificationGas = await userOp.preVerificationGas;
-  //   userOp.preVerificationGas = ethers.BigNumber.from('1');
-  //   console.log('create unsig 4.5')
-  //   userOp.maxFeePerGas = ethers.BigNumber.from(
-  //     await userOp.maxFeePerGas
-  //     // '1'
-  //   ).toHexString();
-  //   console.log('create unsig 5')
-  //   userOp.maxPriorityFeePerGas = ethers.BigNumber.from(
-  //     await userOp.maxPriorityFeePerGas
-  //     // '1'
-  //   ).toHexString();
-  //   console.log('create unsig 6')
-  //   userOp.paymasterAndData = await userOp.paymasterAndData;
-  //   userOp.signature = await userOp.signature;
+  createUnsignedUserOp = async (
+    address: string,
+    transaction: EthersTransactionRequest
+  ): Promise<UserOperationStruct> => {
+    const keyring = this.keyrings[address];
+    console.log('create unsig 1')
+    const userOp = await keyring.createUnsignedUserOp({
+      target: transaction.to,
+      data: transaction.data
+        ? ethers.utils.hexConcat([transaction.data])
+        : '0x',
+      value: transaction.value
+        ? ethers.BigNumber.from(transaction.value)
+        : undefined,
+      gasLimit: transaction.gasLimit,
+      // maxFeePerGas: transaction.maxFeePerGas,
+      // maxPriorityFeePerGas: transaction.maxPriorityFeePerGas,
+    });
 
-  //   console.log('trosso 1')
-  //   const gasParameters = await this.bundler?.estimateUserOpGas(
-  //     await keyring.signUserOp(userOp)
-  //   );
-  //   console.log('trosso 2')
-  //   const estimatedGasLimit = ethers.BigNumber.from(
-  //     gasParameters?.callGasLimit
-  //     // '100000'
-  //   );
-  //   console.log('trosso 3')
-  //   const estimateVerificationGasLimit = ethers.BigNumber.from(
-  //     gasParameters?.verificationGas
-  //     // '100000'
-  //   );
-  //   console.log('trosso 4')
-  //   const estimatePreVerificationGas = ethers.BigNumber.from(
-  //     gasParameters?.preVerificationGas
-  //     // '100000'
-  //   );
-  //   console.log('ultimo trosso')
-  //   userOp.callGasLimit = estimatedGasLimit.gt(
-  //     ethers.BigNumber.from(userOp.callGasLimit)
-  //   )
-  //     ? estimatedGasLimit.toHexString()
-  //     : userOp.callGasLimit;
+    return userOp;
+  
+    // userOp.sender = await userOp.sender;
+    // userOp.nonce = ethers.BigNumber.from(await userOp.nonce).toHexString();
+    // userOp.initCode = await userOp.initCode;
+    // userOp.callData = await userOp.callData;
+    // userOp.callGasLimit = ethers.BigNumber.from(
+    //   await userOp.callGasLimit
+    // ).toHexString();
+    // userOp.verificationGasLimit = ethers.BigNumber.from(
+    //   await userOp.verificationGasLimit
+    // ).toHexString();
+    // userOp.preVerificationGas = await userOp.preVerificationGas;
+    // userOp.preVerificationGas = ethers.BigNumber.from('1');
+    // userOp.maxFeePerGas = ethers.BigNumber.from(
+    //   await userOp.maxFeePerGas
+    //   // '1'
+    // ).toHexString();
+    // userOp.maxPriorityFeePerGas = ethers.BigNumber.from(
+    //   await userOp.maxPriorityFeePerGas
+    //   // '1'
+    // ).toHexString();
+    // userOp.paymasterAndData = await userOp.paymasterAndData;
+    // userOp.signature = await userOp.signature;
 
-  //   userOp.verificationGasLimit = estimateVerificationGasLimit.gt(
-  //     ethers.BigNumber.from(userOp.verificationGasLimit)
-  //   )
-  //     ? estimateVerificationGasLimit.toHexString()
-  //     : userOp.verificationGasLimit;
+    // const gasParameters = await this.bundler?.estimateUserOpGas(
+    //   await keyring.signUserOp(userOp)
+    // );
+    // const estimatedGasLimit = ethers.BigNumber.from(
+    //   gasParameters?.callGasLimit
+    //   // '100000'
+    // );
+    // const estimateVerificationGasLimit = ethers.BigNumber.from(
+    //   gasParameters?.verificationGas
+    //   // '100000'
+    // );
+    // const estimatePreVerificationGas = ethers.BigNumber.from(
+    //   gasParameters?.preVerificationGas
+    //   // '100000'
+    // );
+    // userOp.callGasLimit = estimatedGasLimit.gt(
+    //   ethers.BigNumber.from(userOp.callGasLimit)
+    // )
+    //   ? estimatedGasLimit.toHexString()
+    //   : userOp.callGasLimit;
 
-  //   userOp.preVerificationGas = estimatePreVerificationGas.gt(
-  //     ethers.BigNumber.from(userOp.preVerificationGas)
-  //   )
-  //     ? estimatePreVerificationGas.toHexString()
-  //     : userOp.preVerificationGas;
+    // userOp.verificationGasLimit = estimateVerificationGasLimit.gt(
+    //   ethers.BigNumber.from(userOp.verificationGasLimit)
+    // )
+    //   ? estimateVerificationGasLimit.toHexString()
+    //   : userOp.verificationGasLimit;
 
-  //   return userOp;
-  // };
+    // userOp.preVerificationGas = estimatePreVerificationGas.gt(
+    //   ethers.BigNumber.from(userOp.preVerificationGas)
+    // )
+    //   ? estimatePreVerificationGas.toHexString()
+    //   : userOp.preVerificationGas;
+
+    // return userOp;
+  };
 
   validateKeyringViewInputValue = async () => {};
 

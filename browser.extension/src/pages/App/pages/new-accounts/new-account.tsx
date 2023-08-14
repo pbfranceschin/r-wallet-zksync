@@ -26,6 +26,9 @@ import { useNavigate } from 'react-router-dom';
 import { getAccountAdded } from '../../../Background/redux-slices/selectors/accountSelectors';
 import { resetAccountAdded } from '../../../Background/redux-slices/account';
 import { FlashOffOutlined } from '@mui/icons-material';
+import config from "../../../../exconfig";
+
+const chainID = config.network.chainID;
 
 const TakeNameComponent = ({
   name,
@@ -117,15 +120,18 @@ const NewAccount = () => {
 
   const onOnboardingComplete = useCallback(
     async (context?: any) => {
+      console.log('flag 1');
       setShowLoader(true);
       await backgroundDispatch(
         createNewAccount({
           name: name,
-          chainIds: supportedNetworks.map((network) => network.chainID),
+          // chainIds: supportedNetworks.map((network) => network.chainID),
+          chainIds: [chainID],
           implementation: ActiveAccountImplementation,
           context,
         })
       );
+      console.log('flag 2');
       setShowLoader(false);
     },
     [backgroundDispatch, supportedNetworks, name]

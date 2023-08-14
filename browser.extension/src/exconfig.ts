@@ -12,7 +12,7 @@ const FACTORY_ADDRESS = process.env.FACTORY_ADDRESS;
 export default {
   enablePasswordEncryption: false,
   showTransactionConfirmationScreen: true,
-  factory_address: FACTORY_ADDRESS,
+  factory_address: FACTORY_ADDRESS || "0x00",
   stateVersion: '0.1',
   network: {
     chainID: String(networkID),

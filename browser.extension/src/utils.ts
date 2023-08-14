@@ -6,7 +6,7 @@ import axios, { AxiosInstance } from 'axios';
 import contracts from "../contracts/hardhat_contracts.json";
 import { ContractInterface, Contract } from '@ethersproject/contracts';
 import { erc721ABI } from "wagmi";
-import wallet from "./RWallet.json";
+import wallet from "./rWallet.json";
 
 interface NFT {
   address: string;

@@ -12,6 +12,8 @@ import { AccountApiParamsType, AccountApiType } from './types';
 import { MessageSigningRequest } from '../../Background/redux-slices/signing';
 import { TransactionDetailsForUserOp } from '@account-abstraction/sdk/dist/src/TransactionDetailsForUserOp';
 import config from '../../../exconfig';
+import { utils } from "zksync-web3";
+import rWallet from "../../../rWallet.json";
 
 const FACTORY_ADDRESS =
   config.factory_address || '0x6C583EE7f3a80cB53dDc4789B0Af1aaFf90e55F3';
@@ -64,6 +66,7 @@ class SimpleAccountAPI extends AccountApiType {
     return this.accountContract;
   }
 
+  
   /**
    * return the value to put into the "initCode" field, if the account is not yet deployed.
    * this value holds the "factory" address, followed by this account's information
@@ -127,14 +130,29 @@ class SimpleAccountAPI extends AccountApiType {
   };
 
   signUserOpWithContext = async (
-    userOp: UserOperationStruct,
+    userOp: ethers.PopulatedTransaction,
     context: any
-  ): Promise<UserOperationStruct> => {
+  ): Promise<ethers.PopulatedTransaction> => {
     return {
       ...userOp,
       signature: await this.signUserOpHash(await this.getUserOpHash(userOp)),
     };
   };
+
+  newAddress = (): string => {
+    const salt = ethers.utils.hexlify("salt");
+    const abiCoder = new ethers.utils.AbiCoder();
+    
+    const address = utils.create2Address(
+      config.factory_address,
+      utils.hashBytecode(rWallet.bytecode),
+      salt,
+      abiCoder.encode(["address"], [this.owner.address])
+    );
+
+    return address;
+  }
+
 }
 
 export default SimpleAccountAPI;
